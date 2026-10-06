@@ -1,0 +1,1191 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+  LOCKED
+}
+
+enum AccountType {
+  PERSONAL
+  SHARED_TEMPORARY
+  SERVICE
+}
+
+enum Department {
+  MANAGEMENT
+  FINANCE
+  RETAIL_SALES
+  PROJECT_SALES
+  DESIGN
+  ORDER_COORDINATION
+  IT
+}
+
+enum RoleKey {
+  MANAGER
+  FINANCE
+  ORDER_COORDINATOR
+  PROJECT_MANAGER
+  PROJECT_SALES
+  RETAIL_SALES
+  DESIGNER
+  CEO_VIEWER
+  SYSTEM_ADMIN
+}
+
+enum DataScope {
+  OWN
+  ASSIGNED
+  ALL
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  DISQUALIFIED
+}
+
+enum OpportunityTrack {
+  RETAIL
+  PROJECT
+}
+
+enum OpportunityStage {
+  NEW_ENQUIRY
+  CONTACTED
+  QUALIFIED
+  PREPARATION
+  QUOTATION
+  NEGOTIATION
+  DEPOSIT_PENDING
+  WON
+  LOST
+  ON_HOLD
+  CANCELLED
+}
+
+enum CustomerType {
+  INDIVIDUAL
+  COMPANY
+  CONTRACTOR
+  CONSULTANT
+  GOVERNMENT
+  OTHER
+}
+
+enum DataQualityStatus {
+  VERIFIED
+  NEEDS_VERIFICATION
+}
+
+enum OpportunityMemberRole {
+  DESIGN_OWNER
+  QUOTATION_OWNER
+  PROJECT_OWNER
+  COLLABORATOR
+  WATCHER
+}
+
+enum ActivityType {
+  NOTE
+  CALL
+  EMAIL
+  MEETING
+  WHATSAPP
+  FOLLOW_UP
+  STATUS_CHANGE
+  SYSTEM
+}
+
+enum TaskStatus {
+  TO_DO
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  WAITING_INTERNAL
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NotificationType {
+  ASSIGNMENT
+  MENTION
+  APPROVAL_REQUIRED
+  DEPOSIT_CONFIRMED
+  ETA_CHANGED
+  OVERDUE
+  SYSTEM
+}
+
+enum DocumentCategory {
+  CUSTOMER_DOCUMENT
+  MEASUREMENT
+  REQUIREMENTS
+  DESIGN
+  DESIGN_SOURCE_FILE
+  DESIGN_SUPPLIER_QUOTATION
+  ELEMENT_LIST
+  APPLIANCES_LIST
+  ORDER_CHECKLIST
+  CUSTOMER_QUOTATION
+  AGREEMENT
+  DEPOSIT_PROOF
+  ERP_PO
+  SUPPLIER_INVOICE
+  CUSTOMER_INVOICE
+  DELIVERY_ACCEPTANCE
+  PROJECT_COSTING
+  SUPPLIER_ORDER_CONFIRMATION
+  CHECKLIST_EVIDENCE
+  OTHER
+}
+
+enum DocumentConfidentiality {
+  STANDARD
+  INTERNAL
+  FINANCE_RESTRICTED
+}
+
+enum MeasurementStatus {
+  REQUIRED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum DesignJobStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  REVISION_REQUESTED
+  APPROVED
+  CANCELLED
+}
+
+enum DesignPackageStatus {
+  NOT_STARTED
+  INCOMPLETE
+  READY
+  VERIFIED
+}
+
+enum PricingCaseType {
+  RETAIL
+  PROJECT
+}
+
+enum PricingStatus {
+  DRAFT
+  FINANCE_REVIEW
+  CHANGES_REQUESTED
+  FINANCE_CONFIRMED
+  MANAGER_APPROVAL
+  APPROVED
+  REJECTED
+  SUPERSEDED
+}
+
+enum PricingLineCategory {
+  DESIGN_FURNITURE
+  TRADE_GOODS
+  APPLIANCE
+  WORKTOP
+  SINK_MIXER
+  INSTALLATION
+  FREIGHT
+  CUSTOMS
+  CLEARANCE
+  INSURANCE
+  STAFF_COST
+  OVERHEAD
+  CONTINGENCY
+  OTHER
+}
+
+enum PricingReviewDecision {
+  CONFIRMED
+  CHANGES_REQUESTED
+  REJECTED
+}
+
+enum QuotationStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  SUPERSEDED
+}
+
+enum ApprovalType {
+  RETAIL_EXCEPTION
+  PROJECT_FINAL_PRICE
+  SPECIAL_TERMS
+  RECORD_ARCHIVE
+  RECORD_REOPEN
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED
+  CANCELLED
+}
+
+enum DepositStatus {
+  SUBMITTED
+  CONFIRMED
+  NOT_RECEIVED
+  AMOUNT_MISMATCH
+  NEEDS_CLARIFICATION
+  REVERSED
+}
+
+enum HandoverStatus {
+  PACKAGE_RECEIVED
+  MISSING_FILES
+  READY
+  SENT_TO_SUPPLIER
+  PO_PENDING
+  PO_CREATED
+  PO_SENT
+  ETA_ENTERED
+  COMPLETED
+  CANCELLED
+}
+
+enum ChecklistStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  NOT_APPLICABLE
+  BLOCKED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  ARCHIVE
+  RESTORE
+  LOGIN
+  LOGIN_FAILED
+  LOGOUT
+  PASSWORD_CHANGE
+  SESSION_REVOKE
+  ROLE_CHANGE
+  STAGE_CHANGE
+  ASSIGN
+  APPROVE
+  REJECT
+  FINANCE_CONFIRM
+  DEPOSIT_CONFIRM
+  WON_CONVERSION
+  FILE_UPLOAD
+  QUOTATION_SENT
+  ETA_CHANGE
+  PO_UPDATE
+}
+
+model User {
+  id                  String      @id @default(uuid()) @db.Uuid
+  email               String      @unique
+  displayName         String
+  initials            String?     @unique
+  passwordHash        String
+  department          Department
+  dataScope           DataScope   @default(OWN)
+  status              UserStatus  @default(ACTIVE)
+  accountType         AccountType @default(PERSONAL)
+  forcePasswordChange Boolean     @default(true)
+  failedLoginAttempts Int         @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  sessionVersion      Int         @default(1)
+  version             Int         @default(1)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  archivedAt          DateTime?
+
+  userRoles               UserRole[]
+  leadsOwned              Lead[]                     @relation("LeadOwner")
+  leadsCreated            Lead[]                     @relation("LeadCreator")
+  customersCreated        Customer[]                 @relation("CustomerCreator")
+  contactsCreated         Contact[]                  @relation("ContactCreator")
+  opportunitiesOwned      Opportunity[]              @relation("OpportunityOwner")
+  opportunitiesCreated    Opportunity[]              @relation("OpportunityCreator")
+  opportunityMemberships  OpportunityMember[]
+  activitiesCreated       Activity[]
+  designVersionsCreated   DesignVersion[]
+  tasksAssigned           Task[]                     @relation("TaskAssignee")
+  tasksCreated            Task[]                     @relation("TaskCreator")
+  taskComments            TaskComment[]
+  taskWatchers            TaskWatcher[]
+  mentionsReceived        Mention[]                  @relation("MentionedUser")
+  mentionsCreated         Mention[]                  @relation("MentionCreator")
+  chatterMessages         ChatterMessage[]           @relation("ChatterMessageAuthor")
+  chatterMentionsReceived ChatterMention[]           @relation("ChatterMentionedUser")
+  chatterMentionsCreated  ChatterMention[]           @relation("ChatterMentionCreator")
+  notifications           Notification[]
+  documentVersions        DocumentVersion[]
+  measurementsAssigned    Measurement[]              @relation("MeasurementAssignee")
+  measurementsCreated     Measurement[]              @relation("MeasurementCreator")
+  designJobsAssigned      DesignJob[]                @relation("DesignAssignee")
+  designJobsCreated       DesignJob[]                @relation("DesignCreator")
+  designPackagesVerified  DesignPackage[]            @relation("DesignPackageVerifier")
+  designPackagesSubmitted DesignPackage[]            @relation("DesignPackageSubmitter")
+  pricingCasesCreated     PricingCase[]              @relation("PricingCaseCreator")
+  pricingCasesPrepared    PricingCase[]              @relation("PricingCasePreparer")
+  pricingReviews          PricingReview[]
+  quotationsCreated       Quotation[]                @relation("QuotationCreator")
+  quotationVersionsMade   QuotationVersion[]         @relation("QuotationVersionCreator")
+  quotationVersionsSent   QuotationVersion[]         @relation("QuotationVersionSender")
+  approvalsRequested      Approval[]                 @relation("ApprovalRequester")
+  approvalsDecided        Approval[]                 @relation("ApprovalDecider")
+  depositsSubmitted       Deposit[]                  @relation("DepositSubmitter")
+  depositsReviewed        Deposit[]                  @relation("DepositReviewer")
+  handoversAssigned       OrderHandover[]            @relation("HandoverAssignee")
+  checklistItemsCompleted OpportunityChecklistItem[] @relation("ChecklistCompleter")
+  etaChanges              ETAHistory[]
+  auditLogs               AuditLog[]
+  sessions                Session[]
+
+  @@index([department, status])
+  @@index([archivedAt])
+}
+
+model Session {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @db.Uuid
+  tokenHash      String    @unique
+  sessionVersion Int
+  expiresAt      DateTime
+  lastSeenAt     DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  revokedAt      DateTime?
+  ipAddress      String?
+  userAgent      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt, revokedAt])
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         RoleKey  @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  category    String
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+}
+
+model UserRole {
+  userId     String   @db.Uuid
+  roleId     String   @db.Uuid
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId       String   @db.Uuid
+  permissionId String   @db.Uuid
+  allowed      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model ReferenceSequence {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyCode String   @db.VarChar(16)
+  brandCode   String   @db.VarChar(32)
+  trackCode   String   @db.VarChar(8)
+  typeCode    String   @db.VarChar(16)
+  year        Int
+  nextNumber  Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([companyCode, brandCode, trackCode, typeCode, year])
+  @@index([year, trackCode, typeCode])
+}
+
+model Lead {
+  id                     String            @id @default(uuid()) @db.Uuid
+  reference              String            @unique
+  status                 LeadStatus        @default(NEW)
+  track                  OpportunityTrack?
+  name                   String
+  mobile                 String?
+  email                  String?
+  source                 String?
+  channel                String?
+  campaign               String?
+  interestCategory       String?
+  notes                  String?
+  nextFollowUpAt         DateTime?
+  dataQualityStatus      DataQualityStatus @default(NEEDS_VERIFICATION)
+  ownerId                String            @db.Uuid
+  createdById            String            @db.Uuid
+  convertedAt            DateTime?
+  convertedCustomerId    String?           @unique @db.Uuid
+  convertedOpportunityId String?           @unique @db.Uuid
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  archivedAt             DateTime?
+
+  owner                User         @relation("LeadOwner", fields: [ownerId], references: [id])
+  createdBy            User         @relation("LeadCreator", fields: [createdById], references: [id])
+  convertedCustomer    Customer?    @relation("ConvertedLeadCustomer", fields: [convertedCustomerId], references: [id])
+  convertedOpportunity Opportunity? @relation("ConvertedLeadOpportunity", fields: [convertedOpportunityId], references: [id])
+
+  @@index([ownerId, status])
+  @@index([mobile])
+  @@index([email])
+  @@index([nextFollowUpAt])
+}
+
+model Customer {
+  id                 String            @id @default(uuid()) @db.Uuid
+  reference          String            @unique
+  name               String
+  type               CustomerType      @default(INDIVIDUAL)
+  mobile             String?
+  email              String?
+  legacyReference    String?
+  erpCustomerCode String?
+  dataQualityStatus  DataQualityStatus @default(NEEDS_VERIFICATION)
+  createdById        String            @db.Uuid
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  archivedAt         DateTime?
+
+  createdBy     User          @relation("CustomerCreator", fields: [createdById], references: [id])
+  sourceLead    Lead?         @relation("ConvertedLeadCustomer")
+  contacts      Contact[]
+  opportunities Opportunity[]
+  activities    Activity[]
+  documents     Document[]
+
+  @@index([name])
+  @@index([mobile])
+  @@index([email])
+  @@index([erpCustomerCode])
+}
+
+model Contact {
+  id          String    @id @default(uuid()) @db.Uuid
+  customerId  String    @db.Uuid
+  name        String
+  roleTitle   String?
+  mobile      String?
+  email       String?
+  isPrimary   Boolean   @default(false)
+  createdById String    @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  archivedAt  DateTime?
+
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdBy User     @relation("ContactCreator", fields: [createdById], references: [id])
+
+  @@index([customerId, isPrimary])
+  @@index([mobile])
+  @@index([email])
+}
+
+model Opportunity {
+  id                      String            @id @default(uuid()) @db.Uuid
+  reference               String            @unique
+  title                   String
+  track                   OpportunityTrack
+  stage                   OpportunityStage  @default(NEW_ENQUIRY)
+  customerId              String            @db.Uuid
+  ownerId                 String            @db.Uuid
+  createdById             String            @db.Uuid
+  legacyReference         String?
+  designReference         String?
+  tenderSystemReference   String?           @unique
+  clientTenderReference   String?
+  siteAddress             String?
+  requirementsSummary     String?
+  customerBudgetAed       Decimal?          @map("estimatedValue") @db.Decimal(18, 2)
+  wonValue                Decimal?          @db.Decimal(18, 2)
+  financeInvoiceReference String?
+  financeInvoiceDate      DateTime?
+  financeInvoiceTotal     Decimal?          @db.Decimal(18, 2)
+  currency                String            @default("AED") @db.VarChar(3)
+  probabilityPct          Decimal?          @db.Decimal(5, 2)
+  nextFollowUpAt          DateTime?
+  wonAt                   DateTime?
+  lostReason              String?
+  dataQualityStatus       DataQualityStatus @default(NEEDS_VERIFICATION)
+  version                 Int               @default(1)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  archivedAt              DateTime?
+
+  customer       Customer                   @relation(fields: [customerId], references: [id])
+  owner          User                       @relation("OpportunityOwner", fields: [ownerId], references: [id])
+  createdBy      User                       @relation("OpportunityCreator", fields: [createdById], references: [id])
+  sourceLead     Lead?                      @relation("ConvertedLeadOpportunity")
+  members        OpportunityMember[]
+  activities     Activity[]
+  tasks          Task[]
+  documents      Document[]
+  measurements   Measurement[]
+  designJobs     DesignJob[]
+  designPackage  DesignPackage?
+  pricingCases   PricingCase[]
+  quotations     Quotation[]
+  approvals      Approval[]
+  deposits       Deposit[]
+  handover       OrderHandover?
+  checklistItems OpportunityChecklistItem[]
+  chatterMessages ChatterMessage[]
+  chatterMentions ChatterMention[]
+
+  @@index([ownerId, stage])
+  @@index([customerId])
+  @@index([track, stage])
+  @@index([nextFollowUpAt])
+  @@index([designReference])
+  @@index([clientTenderReference])
+}
+
+model OpportunityMember {
+  opportunityId String                @db.Uuid
+  userId        String                @db.Uuid
+  role          OpportunityMemberRole
+  addedAt       DateTime              @default(now())
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([opportunityId, userId, role])
+  @@index([userId, role])
+}
+
+model Activity {
+  id            String       @id @default(uuid()) @db.Uuid
+  type          ActivityType
+  subject       String
+  body          String?
+  actionUrl     String?
+  metadata      Json?
+  customerId    String?      @db.Uuid
+  opportunityId String?      @db.Uuid
+  createdById   String       @db.Uuid
+  occurredAt    DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+
+  customer    Customer?    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdBy   User         @relation(fields: [createdById], references: [id])
+
+  @@index([customerId, occurredAt])
+  @@index([opportunityId, occurredAt])
+}
+
+model Task {
+  id            String       @id @default(uuid()) @db.Uuid
+  reference     String       @unique
+  title         String
+  description   String?
+  status        TaskStatus   @default(TO_DO)
+  priority      TaskPriority @default(NORMAL)
+  opportunityId String?      @db.Uuid
+  assignedToId  String       @db.Uuid
+  createdById   String       @db.Uuid
+  dueAt         DateTime?
+  blockedReason String?
+  sectionKey    String?
+  automationKey String?      @unique
+  actionUrl     String?
+  metadata      Json?
+  autoCreated   Boolean      @default(false)
+  completedAt   DateTime?
+  version       Int          @default(1)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  archivedAt    DateTime?
+
+  opportunity Opportunity?  @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  assignedTo  User          @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  createdBy   User          @relation("TaskCreator", fields: [createdById], references: [id])
+  comments    TaskComment[]
+  watchers    TaskWatcher[]
+  mentions    Mention[]
+  documents   Document[]
+
+  @@index([assignedToId, status, dueAt])
+  @@index([opportunityId])
+  @@index([sectionKey])
+}
+
+model TaskComment {
+  id        String    @id @default(uuid()) @db.Uuid
+  taskId    String    @db.Uuid
+  authorId  String    @db.Uuid
+  body      String
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+
+  task     Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author   User      @relation(fields: [authorId], references: [id])
+  mentions Mention[]
+
+  @@index([taskId, createdAt])
+}
+
+model TaskWatcher {
+  taskId  String   @db.Uuid
+  userId  String   @db.Uuid
+  addedAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+}
+
+model Mention {
+  id              String    @id @default(uuid()) @db.Uuid
+  taskId          String    @db.Uuid
+  commentId       String?   @db.Uuid
+  mentionedUserId String    @db.Uuid
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  readAt          DateTime?
+
+  task          Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  comment       TaskComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  mentionedUser User         @relation("MentionedUser", fields: [mentionedUserId], references: [id], onDelete: Cascade)
+  createdBy     User         @relation("MentionCreator", fields: [createdById], references: [id])
+
+  @@index([mentionedUserId, readAt])
+}
+
+
+model ChatterMessage {
+  id            String    @id @default(uuid()) @db.Uuid
+  opportunityId String    @db.Uuid
+  authorId      String    @db.Uuid
+  body          String
+  editedAt      DateTime?
+  archivedAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  opportunity Opportunity      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  author      User             @relation("ChatterMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  mentions    ChatterMention[]
+
+  @@index([opportunityId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+model ChatterMention {
+  id              String    @id @default(uuid()) @db.Uuid
+  messageId       String    @db.Uuid
+  opportunityId   String    @db.Uuid
+  mentionedUserId String    @db.Uuid
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  readAt          DateTime?
+
+  message       ChatterMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  opportunity   Opportunity    @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  mentionedUser User           @relation("ChatterMentionedUser", fields: [mentionedUserId], references: [id], onDelete: Cascade)
+  createdBy     User           @relation("ChatterMentionCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, mentionedUserId])
+  @@index([mentionedUserId, readAt, createdAt])
+  @@index([opportunityId, createdAt])
+}
+
+model Notification {
+  id          String           @id @default(uuid()) @db.Uuid
+  recipientId String           @db.Uuid
+  type        NotificationType
+  title       String
+  body        String?
+  entityType  String?
+  entityId    String?
+  href        String?
+  actionLabel String?
+  actorName   String?
+  createdAt   DateTime         @default(now())
+  readAt      DateTime?
+
+  recipient User @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, readAt, createdAt])
+}
+
+model Document {
+  id              String                  @id @default(uuid()) @db.Uuid
+  title           String
+  category        DocumentCategory
+  confidentiality DocumentConfidentiality @default(STANDARD)
+  customerId      String?                 @db.Uuid
+  opportunityId   String?                 @db.Uuid
+  taskId          String?                 @db.Uuid
+  isRequired      Boolean                 @default(false)
+  currentVersion  Int                     @default(0)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  archivedAt      DateTime?
+  archivedById    String?                 @db.Uuid
+  archiveReason   String?
+
+  customer    Customer?         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  opportunity Opportunity?      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  task        Task?             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  versions    DocumentVersion[]
+
+  @@index([customerId, category])
+  @@index([opportunityId, category])
+  @@index([taskId])
+}
+
+model DocumentVersion {
+  id             String   @id @default(uuid()) @db.Uuid
+  documentId     String   @db.Uuid
+  versionNo      Int
+  originalName   String
+  storageKey     String   @unique
+  mimeType       String
+  sizeBytes      BigInt
+  checksumSha256 String?
+  notes          String?
+  uploadedById   String   @db.Uuid
+  immutable      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  document         Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy       User              @relation(fields: [uploadedById], references: [id])
+  designVersion    DesignVersion?    @relation("DesignVersionFile")
+  quotationVersion QuotationVersion? @relation("QuotationVersionFile")
+  depositEvidence  Deposit?          @relation("DepositEvidenceFile")
+  handoverPo       OrderHandover?    @relation("HandoverPoFile")
+
+  @@unique([documentId, versionNo])
+  @@index([uploadedById, createdAt])
+}
+
+model Measurement {
+  id            String            @id @default(uuid()) @db.Uuid
+  opportunityId String            @db.Uuid
+  status        MeasurementStatus @default(REQUIRED)
+  assignedToId  String            @db.Uuid
+  createdById   String            @db.Uuid
+  scheduledAt   DateTime?
+  completedAt   DateTime?
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  assignedTo  User        @relation("MeasurementAssignee", fields: [assignedToId], references: [id])
+  createdBy   User        @relation("MeasurementCreator", fields: [createdById], references: [id])
+
+  @@index([assignedToId, status, scheduledAt])
+}
+
+model DesignJob {
+  id            String          @id @default(uuid()) @db.Uuid
+  opportunityId String          @db.Uuid
+  assignedToId  String          @db.Uuid
+  createdById   String          @db.Uuid
+  status        DesignJobStatus @default(NOT_STARTED)
+  dueAt         DateTime?
+  approvedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  opportunity Opportunity     @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  assignedTo  User            @relation("DesignAssignee", fields: [assignedToId], references: [id])
+  createdBy   User            @relation("DesignCreator", fields: [createdById], references: [id])
+  versions    DesignVersion[]
+
+  @@index([assignedToId, status, dueAt])
+}
+
+model DesignVersion {
+  id                String   @id @default(uuid()) @db.Uuid
+  designJobId       String   @db.Uuid
+  versionNo         Int
+  label             String?
+  notes             String?
+  documentVersionId String?  @unique @db.Uuid
+  createdById       String   @db.Uuid
+  createdAt         DateTime @default(now())
+
+  designJob       DesignJob        @relation(fields: [designJobId], references: [id], onDelete: Cascade)
+  documentVersion DocumentVersion? @relation("DesignVersionFile", fields: [documentVersionId], references: [id])
+  createdBy       User             @relation(fields: [createdById], references: [id])
+
+  @@unique([designJobId, versionNo])
+}
+
+model DesignPackage {
+  id                 String              @id @default(uuid()) @db.Uuid
+  opportunityId      String              @unique @db.Uuid
+  status             DesignPackageStatus @default(NOT_STARTED)
+  designReference    String?
+  revisionLabel      String?
+  designFurnitureEur Decimal?            @db.Decimal(18, 2)
+  designAuxiliaryEur       Decimal?            @db.Decimal(18, 2)
+  supplierPointFactor  Decimal?            @default(6.75) @db.Decimal(18, 6)
+  submittedAt        DateTime?
+  submittedById      String?             @db.Uuid
+  readyAt            DateTime?
+  verifiedAt         DateTime?
+  verifiedById       String?             @db.Uuid
+  notes              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  submittedBy User?       @relation("DesignPackageSubmitter", fields: [submittedById], references: [id])
+  verifiedBy  User?       @relation("DesignPackageVerifier", fields: [verifiedById], references: [id])
+}
+
+model PricingCase {
+  id                   String          @id @default(uuid()) @db.Uuid
+  opportunityId        String          @db.Uuid
+  type                 PricingCaseType
+  status               PricingStatus   @default(DRAFT)
+  revision             Int             @default(1)
+  sourceCurrency       String?         @db.VarChar(3)
+  sellingCurrency      String          @default("AED") @db.VarChar(3)
+  sellingRate          Decimal?        @db.Decimal(18, 6)
+  exchangeRate         Decimal?        @db.Decimal(18, 6)
+  companyMarkupPct     Decimal?        @db.Decimal(7, 4)
+  priceBeforeDiscount  Decimal?        @db.Decimal(18, 2)
+  customerDiscountAed  Decimal?        @db.Decimal(18, 2)
+  formulaVersion       String?
+  estimatedCost        Decimal?        @db.Decimal(18, 2)
+  approvedSellingPrice Decimal?        @db.Decimal(18, 2)
+  grossProfit          Decimal?        @db.Decimal(18, 2)
+  grossMarginPct       Decimal?        @db.Decimal(7, 4)
+  financeNotes         String?
+  preparedById         String?         @db.Uuid
+  financeConfirmedAt   DateTime?
+  managerApprovedAt    DateTime?
+  overrideReason       String?
+  sourceEvidenceNotes  String?
+  createdById          String          @db.Uuid
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  opportunity       Opportunity        @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdBy         User               @relation("PricingCaseCreator", fields: [createdById], references: [id])
+  preparedBy        User?              @relation("PricingCasePreparer", fields: [preparedById], references: [id])
+  lines             PricingLine[]
+  reviews           PricingReview[]
+  approvals         Approval[]
+  quotationVersions QuotationVersion[]
+
+  @@unique([opportunityId, revision])
+  @@index([status, type])
+}
+
+model PricingLine {
+  id                String              @id @default(uuid()) @db.Uuid
+  pricingCaseId     String              @db.Uuid
+  category          PricingLineCategory
+  description       String
+  quantity          Decimal             @default(1) @db.Decimal(18, 4)
+  supplierUnitPrice Decimal?            @db.Decimal(18, 4)
+  supplierCurrency  String?             @db.VarChar(3)
+  appliedRate       Decimal?            @db.Decimal(18, 6)
+  markupPct         Decimal?            @db.Decimal(7, 4)
+  costAed           Decimal?            @db.Decimal(18, 2)
+  sellingPriceAed   Decimal?            @db.Decimal(18, 2)
+  isManual          Boolean             @default(false)
+  sortOrder         Int                 @default(0)
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  pricingCase PricingCase @relation(fields: [pricingCaseId], references: [id], onDelete: Cascade)
+
+  @@index([pricingCaseId, sortOrder])
+}
+
+model PricingReview {
+  id            String                @id @default(uuid()) @db.Uuid
+  pricingCaseId String                @db.Uuid
+  reviewerId    String                @db.Uuid
+  decision      PricingReviewDecision
+  comments      String?
+  createdAt     DateTime              @default(now())
+
+  pricingCase PricingCase @relation(fields: [pricingCaseId], references: [id], onDelete: Cascade)
+  reviewer    User        @relation(fields: [reviewerId], references: [id])
+
+  @@index([pricingCaseId, createdAt])
+}
+
+model Quotation {
+  id                String           @id @default(uuid()) @db.Uuid
+  opportunityId     String           @db.Uuid
+  internalReference String           @unique
+  businessReference String           @unique
+  legacyReference   String?
+  status            QuotationStatus  @default(DRAFT)
+  currentVersion    Int              @default(0)
+  salesInitials     String
+  trackSnapshot     OpportunityTrack
+  createdById       String           @db.Uuid
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  archivedAt        DateTime?
+
+  opportunity Opportunity        @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdBy   User               @relation("QuotationCreator", fields: [createdById], references: [id])
+  versions    QuotationVersion[]
+  approvals   Approval[]
+
+  @@index([opportunityId, status])
+  @@index([legacyReference])
+}
+
+model QuotationVersion {
+  id                   String          @id @default(uuid()) @db.Uuid
+  quotationId          String          @db.Uuid
+  versionNo            Int
+  status               QuotationStatus @default(DRAFT)
+  pricingCaseId        String?         @db.Uuid
+  preVatAmount         Decimal         @db.Decimal(18, 2)
+  currency             String          @default("AED") @db.VarChar(3)
+  notes                String?
+  validUntil           DateTime?
+  paymentTerms         String?
+  contentSnapshot      Json?
+  pdfDocumentVersionId String?         @unique @db.Uuid
+  createdById          String          @db.Uuid
+  sentById             String?         @db.Uuid
+  sentAt               DateTime?
+  immutable            Boolean         @default(false)
+  createdAt            DateTime        @default(now())
+
+  quotation          Quotation        @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  pricingCase        PricingCase?     @relation(fields: [pricingCaseId], references: [id])
+  pdfDocumentVersion DocumentVersion? @relation("QuotationVersionFile", fields: [pdfDocumentVersionId], references: [id])
+  createdBy          User             @relation("QuotationVersionCreator", fields: [createdById], references: [id])
+  sentBy             User?            @relation("QuotationVersionSender", fields: [sentById], references: [id])
+
+  @@unique([quotationId, versionNo])
+  @@index([pricingCaseId])
+}
+
+model Approval {
+  id            String         @id @default(uuid()) @db.Uuid
+  type          ApprovalType
+  status        ApprovalStatus @default(PENDING)
+  opportunityId String         @db.Uuid
+  pricingCaseId String?        @db.Uuid
+  quotationId   String?        @db.Uuid
+  requestedById String         @db.Uuid
+  decidedById   String?        @db.Uuid
+  requestReason String?
+  decisionNotes String?
+  requestedAt   DateTime       @default(now())
+  decidedAt     DateTime?
+
+  opportunity Opportunity  @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  pricingCase PricingCase? @relation(fields: [pricingCaseId], references: [id], onDelete: Cascade)
+  quotation   Quotation?   @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  requestedBy User         @relation("ApprovalRequester", fields: [requestedById], references: [id])
+  decidedBy   User?        @relation("ApprovalDecider", fields: [decidedById], references: [id])
+
+  @@index([status, type, requestedAt])
+}
+
+model ChecklistDefinition {
+  id               String            @id @default(uuid()) @db.Uuid
+  key              String            @unique
+  section          String
+  label            String
+  track            OpportunityTrack?
+  responsibleRole  RoleKey?
+  required         Boolean           @default(true)
+  autoRule         String?
+  evidenceCategory DocumentCategory?
+  sortOrder        Int               @default(0)
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  items OpportunityChecklistItem[]
+
+  @@index([track, isActive, sortOrder])
+}
+
+model OpportunityChecklistItem {
+  id            String          @id @default(uuid()) @db.Uuid
+  opportunityId String          @db.Uuid
+  definitionId  String          @db.Uuid
+  labelSnapshot String
+  status        ChecklistStatus @default(NOT_STARTED)
+  completedById String?         @db.Uuid
+  completedAt   DateTime?
+  comment       String?
+  blockedReason String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  opportunity Opportunity         @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  definition  ChecklistDefinition @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  completedBy User?               @relation("ChecklistCompleter", fields: [completedById], references: [id])
+
+  @@unique([opportunityId, definitionId])
+  @@index([opportunityId, status])
+}
+
+model Deposit {
+  id                        String        @id @default(uuid()) @db.Uuid
+  reference                 String?       @unique
+  opportunityId             String        @db.Uuid
+  status                    DepositStatus @default(SUBMITTED)
+  expectedAmount            Decimal?      @db.Decimal(18, 2)
+  submittedAmount           Decimal       @db.Decimal(18, 2)
+  currency                  String        @default("AED") @db.VarChar(3)
+  paymentReference          String?
+  evidenceDocumentVersionId String?       @unique @db.Uuid
+  submittedById             String        @db.Uuid
+  reviewedById              String?       @db.Uuid
+  submittedAt               DateTime      @default(now())
+  reviewedAt                DateTime?
+  reviewNotes               String?
+
+  opportunity      Opportunity      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  evidenceDocument DocumentVersion? @relation("DepositEvidenceFile", fields: [evidenceDocumentVersionId], references: [id])
+  submittedBy      User             @relation("DepositSubmitter", fields: [submittedById], references: [id])
+  reviewedBy       User?            @relation("DepositReviewer", fields: [reviewedById], references: [id])
+
+  @@index([opportunityId, status])
+  @@index([status, submittedAt])
+}
+
+model OrderHandover {
+  id                  String         @id @default(uuid()) @db.Uuid
+  opportunityId       String         @unique @db.Uuid
+  status              HandoverStatus @default(PACKAGE_RECEIVED)
+  assignedToId        String         @db.Uuid
+  sentToSupplierAt      DateTime?
+  supplierReference     String?
+  erpPoNumber      String?
+  poDate              DateTime?
+  poDocumentVersionId String?        @unique @db.Uuid
+  poSentAt            DateTime?
+  currentEta          DateTime?
+  completedAt         DateTime?
+  notes               String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  opportunity       Opportunity      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  assignedTo        User             @relation("HandoverAssignee", fields: [assignedToId], references: [id])
+  poDocumentVersion DocumentVersion? @relation("HandoverPoFile", fields: [poDocumentVersionId], references: [id])
+  etaHistory        ETAHistory[]
+
+  @@index([assignedToId, status])
+  @@index([erpPoNumber])
+}
+
+model ETAHistory {
+  id          String    @id @default(uuid()) @db.Uuid
+  handoverId  String    @db.Uuid
+  oldDate     DateTime?
+  newDate     DateTime
+  reason      String
+  changedById String    @db.Uuid
+  changedAt   DateTime  @default(now())
+
+  handover  OrderHandover @relation(fields: [handoverId], references: [id], onDelete: Cascade)
+  changedBy User          @relation(fields: [changedById], references: [id])
+
+  @@index([handoverId, changedAt])
+}
+
+model AuditLog {
+  id            String      @id @default(uuid()) @db.Uuid
+  actorId       String?     @db.Uuid
+  action        AuditAction
+  entityType    String
+  entityId      String
+  opportunityId String?     @db.Uuid
+  taskId        String?     @db.Uuid
+  actionUrl     String?
+  before        Json?
+  after         Json?
+  metadata      Json?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([opportunityId, createdAt])
+  @@index([taskId, createdAt])
+}
+
+model NumberSequence {
+  key          String   @id
+  currentValue BigInt   @default(0)
+  padding      Int      @default(6)
+  updatedAt    DateTime @updatedAt
+}
+
+model SystemSetting {
+  key         String   @id
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt
+}

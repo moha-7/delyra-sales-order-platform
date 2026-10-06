@@ -1,0 +1,61 @@
+{
+  "name": "delyra-sales-order-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:validate": "prisma validate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset",
+    "backup": "bash scripts/backup.sh",
+    "restore": "bash scripts/restore.sh",
+    "user:reset-password": "tsx scripts/reset-user-password.ts",
+    "tasks:escalate": "tsx scripts/escalate-overdue-tasks.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "argon2": "0.44.0",
+    "bootstrap-icons": "1.13.1",
+    "decimal.js": "10.6.0",
+    "dotenv": "17.4.2",
+    "next": "16.3.8",
+    "pg": "8.22.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.1",
+    "@types/node": "26.0.0",
+    "@types/pg": "8.20.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.3.8",
+    "postcss": "8.5.16",
+    "prisma": "7.10.0",
+    "tailwindcss": "4.3.2",
+    "tsx": "4.22.4",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2",
+    "mysql2": "3.24.5",
+    "source-map-js": "1.2.2"
+  }
+}

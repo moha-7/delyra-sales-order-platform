@@ -1,0 +1,12 @@
+.git
+.gitignore
+.next
+node_modules
+.env
+.env.*
+!.env.example
+storage
+runtime*.log
+*.log
+.DS_Store
+src/generated/prisma/
