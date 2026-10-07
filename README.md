@@ -270,7 +270,11 @@ A hosted deployment requires:
 
 The current local storage adapter is intentionally kept behind a storage boundary so a hosted object-storage implementation can replace it without changing the business workflow.
 
-<!-- Live demo URL will be added after the deployment checkpoint. -->
+### Live demo
+
+[Delyra - Live Demo](https://delyra-sales-order-platform-production.up.railway.app)
+
+The hosted portfolio environment runs on Railway with PostgreSQL, production migrations, synthetic Northstar demo data, HTTPS, and persistent application storage.
 
 ## Portfolio data and privacy
 
@@ -282,4 +286,4 @@ Northstar Projects Group, its users, customers, opportunities, quotations, invoi
 
 **Delyra 1.0.0** represents the completed portfolio baseline for the Sales & Order Lifecycle Platform.
 
-The next release step is hosted deployment followed by the public GitHub `v1.0.0` release.
+The hosted demo is live. The remaining release step is the public GitHub `v1.0.0` release.
